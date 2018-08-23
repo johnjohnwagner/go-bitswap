@@ -6,15 +6,17 @@ import (
 
 	wantlist "github.com/ipfs/go-bitswap/wantlist"
 
+	"github.com/fatih/color"
 	cid "github.com/ipfs/go-cid"
 	pq "github.com/ipfs/go-ipfs-pq"
 	peer "github.com/libp2p/go-libp2p-peer"
+	"math"
 )
 
 type peerRequestQueue interface {
 	// Pop returns the next peerRequestTask. Returns nil if the peerRequestQueue is empty.
 	Pop() *peerRequestTask
-	Push(entry *wantlist.Entry, to peer.ID)
+	Push(entry *wantlist.Entry, receipt *Receipt)
 	Remove(k *cid.Cid, p peer.ID)
 
 	// NB: cannot expose simply expose taskQueue.Len because trashed elements
@@ -46,7 +48,10 @@ type prq struct {
 }
 
 // Push currently adds a new peerRequestTask to the end of the list
-func (tl *prq) Push(entry *wantlist.Entry, to peer.ID) {
+func (tl *prq) Push(entry *wantlist.Entry, receipt *Receipt) {
+	to := peer.ID(receipt.Peer)
+	color.Yellow("### JOHN ### Pushing new entry to peerRequestQueue (peerID: " + to.String() + ")")
+
 	tl.lock.Lock()
 	defer tl.lock.Unlock()
 	partner, ok := tl.partners[to]
@@ -62,9 +67,12 @@ func (tl *prq) Push(entry *wantlist.Entry, to peer.ID) {
 		return
 	}
 
+	partner.weight = expWeight(receipt)
+
 	if task, ok := tl.taskMap[taskKey(to, entry.Cid)]; ok {
 		task.Entry.Priority = entry.Priority
 		partner.taskQueue.Update(task.index)
+		tl.pQueue.Update(partner.Index())
 		return
 	}
 
@@ -219,7 +227,14 @@ func wrapCmp(f func(a, b *peerRequestTask) bool) func(a, b pq.Elem) bool {
 	}
 }
 
+func expWeight(r *Receipt) float64 {
+	return 100 / (1 + math.Exp(2 - r.Value))
+}
+
 type activePartner struct {
+
+	// Weight is used to sort the PRQ (strategy)
+	weight float64
 
 	// Active is the number of blocks this peer is currently being sent
 	// active must be locked around as it will be updated externally
