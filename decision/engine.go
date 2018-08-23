@@ -268,7 +268,7 @@ func (e *Engine) MessageReceived(p peer.ID, m bsmsg.BitSwapMessage) error {
 			if exists, err := e.bs.Has(entry.Cid); err == nil && exists {
 				receipt := e.UnsafeLedgerForPeer(p)
 				color.Green(fmt.Sprintf("Receipt: %+v", receipt))
-				e.peerRequestQueue.Push(entry.Entry, receipt)
+				e.peerRequestQueue.Push(entry.Entry, p, receipt)
 				newWorkExists = true
 			}
 		}
@@ -289,7 +289,7 @@ func (e *Engine) addBlock(block blocks.Block) {
 		if entry, ok := l.WantListContains(block.Cid()); ok {
 			// We might be reading Partner's ledger while a goroutine edits it ...
 			receipt := e.UnsafeLedgerForPeer(l.Partner)
-			e.peerRequestQueue.Push(entry, receipt)
+			e.peerRequestQueue.Push(entry, l.Partner, receipt)
 			work = true
 		}
 		l.lk.Unlock()

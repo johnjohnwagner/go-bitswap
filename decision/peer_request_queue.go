@@ -16,7 +16,7 @@ import (
 type peerRequestQueue interface {
 	// Pop returns the next peerRequestTask. Returns nil if the peerRequestQueue is empty.
 	Pop() *peerRequestTask
-	Push(entry *wantlist.Entry, receipt *Receipt)
+	Push(entry *wantlist.Entry, to peer.ID, receipt *Receipt)
 	Remove(k *cid.Cid, p peer.ID)
 
 	// NB: cannot expose simply expose taskQueue.Len because trashed elements
@@ -48,8 +48,7 @@ type prq struct {
 }
 
 // Push currently adds a new peerRequestTask to the end of the list
-func (tl *prq) Push(entry *wantlist.Entry, receipt *Receipt) {
-	to := peer.ID(receipt.Peer)
+func (tl *prq) Push(entry *wantlist.Entry, to peer.ID, receipt *Receipt) {
 	color.Yellow("### JOHN ### Pushing new entry to peerRequestQueue (peerID: " + to.String() + ")")
 
 	tl.lock.Lock()
