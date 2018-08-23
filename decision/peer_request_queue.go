@@ -28,7 +28,7 @@ func newPRQ() *prq {
 		taskMap:  make(map[string]*peerRequestTask),
 		partners: make(map[peer.ID]*activePartner),
 		frozen:   make(map[peer.ID]*activePartner),
-		pQueue:   pq.New(partnerCompare),
+		pQueue:   pq.New(partnerCompareWeight),
 	}
 }
 
@@ -66,7 +66,7 @@ func (tl *prq) Push(entry *wantlist.Entry, to peer.ID, receipt *Receipt) {
 		return
 	}
 
-	//partner.weight = expWeight(receipt)
+	partner.weight = expWeight(receipt)
 
 	if task, ok := tl.taskMap[taskKey(to, entry.Cid)]; ok {
 		task.Entry.Priority = entry.Priority
@@ -233,7 +233,7 @@ func expWeight(r *Receipt) float64 {
 type activePartner struct {
 
 	// Weight is used to sort the PRQ (strategy)
-	//weight float64
+	weight float64
 
 	// Active is the number of blocks this peer is currently being sent
 	// active must be locked around as it will be updated externally
@@ -292,6 +292,29 @@ func partnerCompare(a, b pq.Elem) bool {
 		return pa.taskQueue.Len() > pb.taskQueue.Len()
 	}
 	return pa.active < pb.active
+}
+
+func partnerCompareWeight(a, b pq.Elem) bool {
+	pa := a.(*activePartner)
+	pb := b.(*activePartner)
+
+	// having no blocks in their wantlist means lowest priority
+	// having both of these checks ensures stability of the sort
+	if pa.requests == 0 {
+		return false
+	}
+	if pb.requests == 0 {
+		return true
+	}
+
+	if pa.freezeVal > pb.freezeVal {
+		return false
+	}
+	if pa.freezeVal < pb.freezeVal {
+		return true
+	}
+
+	return pa.weight > pb.weight
 }
 
 // StartTask signals that a task was started for this partner
