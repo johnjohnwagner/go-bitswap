@@ -67,7 +67,7 @@ func (tl *prq) Push(entry *wantlist.Entry, receipt *Receipt) {
 		return
 	}
 
-	partner.weight = expWeight(receipt)
+	//partner.weight = expWeight(receipt)
 
 	if task, ok := tl.taskMap[taskKey(to, entry.Cid)]; ok {
 		task.Entry.Priority = entry.Priority
@@ -234,7 +234,7 @@ func expWeight(r *Receipt) float64 {
 type activePartner struct {
 
 	// Weight is used to sort the PRQ (strategy)
-	weight float64
+	//weight float64
 
 	// Active is the number of blocks this peer is currently being sent
 	// active must be locked around as it will be updated externally

@@ -9,11 +9,12 @@ import (
 	bsmsg "github.com/ipfs/go-bitswap/message"
 	wl "github.com/ipfs/go-bitswap/wantlist"
 
+	"fmt"
 	"github.com/fatih/color"
-	blocks "github.com/ipfs/go-block-format"
+	"github.com/ipfs/go-block-format"
 	bstore "github.com/ipfs/go-ipfs-blockstore"
 	logging "github.com/ipfs/go-log"
-	peer "github.com/libp2p/go-libp2p-peer"
+	"github.com/libp2p/go-libp2p-peer"
 	"strings"
 )
 
@@ -130,6 +131,20 @@ func (e *Engine) LedgerForPeer(p peer.ID) *Receipt {
 	}
 }
 
+func (e *Engine) UnsafeLedgerForPeer(p peer.ID) *Receipt {
+	ledger := e.findOrCreate(p)
+
+	return &Receipt{
+		Peer:      ledger.Partner.String(),
+		Value:     ledger.Accounting.Value(),
+		Sent:      ledger.Accounting.BytesSent,
+		Recv:      ledger.Accounting.BytesRecv,
+		Exchanged: ledger.ExchangeCount(),
+	}
+}
+
+
+
 func (e *Engine) taskWorker(ctx context.Context) {
 	defer close(e.outbox) // because taskWorker uses the channel exclusively
 	for {
@@ -220,9 +235,6 @@ func (e *Engine) MessageReceived(p peer.ID, m bsmsg.BitSwapMessage) error {
 		log.Debugf("received empty message from %s", p)
 	}
 
-	if strings.Contains(p.String(), "2FLaoe") {
-		color.Magenta("### John ### Message received from " + p.String())
-	}
 
 	newWorkExists := false
 	defer func() {
@@ -232,6 +244,13 @@ func (e *Engine) MessageReceived(p peer.ID, m bsmsg.BitSwapMessage) error {
 	}()
 
 	l := e.findOrCreate(p)
+
+	if strings.Contains(p.String(), "SZGgvN") {
+		color.Magenta("### John ### Message received from " + p.String())
+		color.Magenta(fmt.Sprintf("Message: %v", m.Wantlist()))
+		color.Magenta(fmt.Sprintf("Ledger: %+v", l))
+	}
+
 	l.lk.Lock()
 	defer l.lk.Unlock()
 	if m.Full() {
@@ -247,7 +266,8 @@ func (e *Engine) MessageReceived(p peer.ID, m bsmsg.BitSwapMessage) error {
 			log.Debugf("wants %s - %d", entry.Cid, entry.Priority)
 			l.Wants(entry.Cid, entry.Priority)
 			if exists, err := e.bs.Has(entry.Cid); err == nil && exists {
-				receipt := e.LedgerForPeer(p)
+				receipt := e.UnsafeLedgerForPeer(p)
+				color.Green(fmt.Sprintf("Receipt: %+v", receipt))
 				e.peerRequestQueue.Push(entry.Entry, receipt)
 				newWorkExists = true
 			}
@@ -267,7 +287,8 @@ func (e *Engine) addBlock(block blocks.Block) {
 	for _, l := range e.ledgerMap {
 		l.lk.Lock()
 		if entry, ok := l.WantListContains(block.Cid()); ok {
-			receipt := e.LedgerForPeer(l.Partner)
+			// We might be reading Partner's ledger while a goroutine edits it ...
+			receipt := e.UnsafeLedgerForPeer(l.Partner)
 			e.peerRequestQueue.Push(entry, receipt)
 			work = true
 		}
