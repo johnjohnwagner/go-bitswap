@@ -9,10 +9,12 @@ import (
 	bsmsg "github.com/ipfs/go-bitswap/message"
 	wl "github.com/ipfs/go-bitswap/wantlist"
 
+	"github.com/fatih/color"
 	blocks "github.com/ipfs/go-block-format"
 	bstore "github.com/ipfs/go-ipfs-blockstore"
 	logging "github.com/ipfs/go-log"
 	peer "github.com/libp2p/go-libp2p-peer"
+	"strings"
 )
 
 // TODO consider taking responsibility for other types of requests. For
@@ -101,6 +103,7 @@ func NewEngine(ctx context.Context, bs bstore.Blockstore) *Engine {
 		workSignal:       make(chan struct{}, 1),
 		ticker:           time.NewTicker(time.Millisecond * 100),
 	}
+	color.Green("### John ### New engine created")
 	go e.taskWorker(ctx)
 	return e
 }
@@ -215,6 +218,10 @@ func (e *Engine) Peers() []peer.ID {
 func (e *Engine) MessageReceived(p peer.ID, m bsmsg.BitSwapMessage) error {
 	if len(m.Wantlist()) == 0 && len(m.Blocks()) == 0 {
 		log.Debugf("received empty message from %s", p)
+	}
+
+	if strings.Contains(p.String(), "2FLaoe") {
+		color.Magenta("### John ### Message received from " + p.String())
 	}
 
 	newWorkExists := false
