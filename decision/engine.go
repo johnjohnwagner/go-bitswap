@@ -131,19 +131,16 @@ func (e *Engine) LedgerForPeer(p peer.ID) *Receipt {
 	}
 }
 
-func (e *Engine) UnsafeLedgerForPeer(p peer.ID) *Receipt {
-	ledger := e.findOrCreate(p)
+func (e *Engine) UnsafeReceiptFromLedger(ledger_ *ledger) *Receipt {
 
 	return &Receipt{
-		Peer:      ledger.Partner.String(),
-		Value:     ledger.Accounting.Value(),
-		Sent:      ledger.Accounting.BytesSent,
-		Recv:      ledger.Accounting.BytesRecv,
-		Exchanged: ledger.ExchangeCount(),
+		Peer:      ledger_.Partner.String(),
+		Value:     ledger_.Accounting.Value(),
+		Sent:      ledger_.Accounting.BytesSent,
+		Recv:      ledger_.Accounting.BytesRecv,
+		Exchanged: ledger_.ExchangeCount(),
 	}
 }
-
-
 
 func (e *Engine) taskWorker(ctx context.Context) {
 	defer close(e.outbox) // because taskWorker uses the channel exclusively
@@ -235,7 +232,6 @@ func (e *Engine) MessageReceived(p peer.ID, m bsmsg.BitSwapMessage) error {
 		log.Debugf("received empty message from %s", p)
 	}
 
-
 	newWorkExists := false
 	defer func() {
 		if newWorkExists {
@@ -266,7 +262,7 @@ func (e *Engine) MessageReceived(p peer.ID, m bsmsg.BitSwapMessage) error {
 			log.Debugf("wants %s - %d", entry.Cid, entry.Priority)
 			l.Wants(entry.Cid, entry.Priority)
 			if exists, err := e.bs.Has(entry.Cid); err == nil && exists {
-				receipt := e.UnsafeLedgerForPeer(p)
+				receipt := e.UnsafeReceiptFromLedger(l)
 				color.Green(fmt.Sprintf("Receipt: %+v", receipt))
 				e.peerRequestQueue.Push(entry.Entry, p, receipt)
 				newWorkExists = true
@@ -288,7 +284,7 @@ func (e *Engine) addBlock(block blocks.Block) {
 		l.lk.Lock()
 		if entry, ok := l.WantListContains(block.Cid()); ok {
 			// We might be reading Partner's ledger while a goroutine edits it ...
-			receipt := e.UnsafeLedgerForPeer(l.Partner)
+			receipt := e.UnsafeReceiptFromLedger(l)
 			e.peerRequestQueue.Push(entry, l.Partner, receipt)
 			work = true
 		}
