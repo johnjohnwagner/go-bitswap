@@ -194,8 +194,9 @@ func (e *Engine) nextEnvelope(ctx context.Context) (*Envelope, error) {
 			continue
 		}
 
+		color.Yellow(fmt.Sprintf("### JOHN ### Sending blocks to: %v", nextTask.Target.String()))
 		if e.last_sent_to != nextTask.Target {
-			color.Yellow(fmt.Sprintf("### JOHN ### Sending blocks to: %v", nextTask.Target.String()))
+			color.Yellow(">>> Switching target")
 			e.last_sent_to = nextTask.Target
 		}
 

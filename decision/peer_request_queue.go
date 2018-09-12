@@ -27,7 +27,7 @@ func newPRQ() *prq {
 		taskMap:  make(map[string]*peerRequestTask),
 		partners: make(map[peer.ID]*activePartner),
 		frozen:   make(map[peer.ID]*activePartner),
-		pQueue:   pq.New(partnerCompareWeight),
+		pQueue:   pq.New(partnerCompare),
 	}
 }
 
