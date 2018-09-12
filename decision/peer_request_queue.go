@@ -97,7 +97,10 @@ func (tl *prq) Push(entry *wantlist.Entry, to peer.ID, receipt *Receipt) {
 	partner.requests++
 	tl.pQueue.Update(partner.Index())
 	if strings.Contains(to.String(), "Wyntbo") {
-		color.Magenta(fmt.Sprintf("$$$ pQueue: %v", tl.pQueue))
+		color.Magenta(fmt.Sprintf("$$$ Pushing blocks to pQueue for: %v", to.String()))
+	}
+	if strings.Contains(to.String(), "PtvewD") {
+		color.Blue(fmt.Sprintf("$$$ Pushing blocks to pQueue for: %v", to.String()))
 	}
 	}
 
