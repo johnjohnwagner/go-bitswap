@@ -339,7 +339,7 @@ func (e *Engine) PeerConnected(p peer.ID) {
 	if !ok {
 		l = newLedger(p)
 		e.ledgerMap[p] = l
-		if strings.Contains(p.String(), "Wyntbo") || strings.Contains(p.String(), "bskDM7") {
+		if strings.Contains(p.String(), "Wyntbo") || strings.Contains(p.String(), "PtvewD") {
 			color.Red(fmt.Sprintf("### Ledger reinitialised for %v (peerCo)", p.String()))
 		}
 	}
@@ -360,7 +360,7 @@ func (e *Engine) PeerDisconnected(p peer.ID) {
 	l.ref--
 	if l.ref <= 0 {
 		delete(e.ledgerMap, p)
-		if strings.Contains(p.String(), "Wyntbo") || strings.Contains(p.String(), "bskDM7") {
+		if strings.Contains(p.String(), "Wyntbo") || strings.Contains(p.String(), "PtvewD") {
 			color.Red(fmt.Sprintf("### Ledger reinitialised for %v (peerDisco)", p.String()))
 		}
 	}
@@ -384,7 +384,7 @@ func (e *Engine) findOrCreate(p peer.ID) *ledger {
 	if !ok {
 		l = newLedger(p)
 		e.ledgerMap[p] = l
-		if strings.Contains(p.String(), "Wyntbo") || strings.Contains(p.String(), "bskDM7") {
+		if strings.Contains(p.String(), "Wyntbo") || strings.Contains(p.String(), "PtvewD") {
 			color.Red(fmt.Sprintf("### Ledger reinitialised for %v (notFound)", p.String()))
 		}
 	}
