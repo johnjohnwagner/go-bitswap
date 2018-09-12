@@ -4,11 +4,11 @@ import (
 	"sync"
 	"time"
 
-	"gx/ipfs/QmTtmrK4iiM3MxWNA3pvbM9ekQiGZAiFyo57GP8B9FFgtz/go-bitswap/wantlist"
+	"github.com/ipfs/go-bitswap/wantlist"
 
-	"gx/ipfs/QmQsErDt8Qgw1XrsXf2BpEzDgGWtB1YLsTAARBup5b6B9W/go-libp2p-peer"
-	"gx/ipfs/QmZFbDTY9jfSBms2MchvYM9oYRbAF19K7Pby47yDBfpPrb/go-cid"
-	"gx/ipfs/QmZUbTDJ39JpvtFCSubiWeUTQRvMA1tVE5RZCJrY4oeAsC/go-ipfs-pq"
+	"github.com/ipfs/go-cid"
+	"github.com/ipfs/go-ipfs-pq"
+	"github.com/libp2p/go-libp2p-peer"
 	"math"
 	"strings"
 )
