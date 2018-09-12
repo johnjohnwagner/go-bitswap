@@ -6,15 +6,15 @@ import (
 	"sync"
 	"time"
 
-	bsmsg "github.com/ipfs/go-bitswap/message"
-	wl "github.com/ipfs/go-bitswap/wantlist"
+	bsmsg "gx/ipfs/QmTtmrK4iiM3MxWNA3pvbM9ekQiGZAiFyo57GP8B9FFgtz/go-bitswap/message"
+	wl "gx/ipfs/QmTtmrK4iiM3MxWNA3pvbM9ekQiGZAiFyo57GP8B9FFgtz/go-bitswap/wantlist"
 
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/ipfs/go-block-format"
-	bstore "github.com/ipfs/go-ipfs-blockstore"
-	logging "github.com/ipfs/go-log"
-	"github.com/libp2p/go-libp2p-peer"
+	"gx/ipfs/QmQsErDt8Qgw1XrsXf2BpEzDgGWtB1YLsTAARBup5b6B9W/go-libp2p-peer"
+	logging "gx/ipfs/QmRREK2CAZ5Re2Bd9zZFG6FeYDppUWt5cMgsoUEp3ktgSr/go-log"
+	"gx/ipfs/QmWAzSEoqZ6xU6pu8yL8e5WaMb7wtbfbhhN4p1DknUPtr3/go-block-format"
+	bstore "gx/ipfs/QmcmpX42gtDv1fz24kau4wjS9hfwWj5VexWBKgGnWzsyag/go-ipfs-blockstore"
 	"strings"
 )
 
@@ -194,11 +194,11 @@ func (e *Engine) nextEnvelope(ctx context.Context) (*Envelope, error) {
 			continue
 		}
 
-		color.Yellow(fmt.Sprintf("### JOHN ### Sending blocks to: %v", nextTask.Target.String()))
 		if e.last_sent_to != nextTask.Target {
 			color.Yellow(">>> Switching target")
 			e.last_sent_to = nextTask.Target
 		}
+		color.Yellow(fmt.Sprintf("### JOHN ### Sending blocks to: %v", nextTask.Target.String()))
 
 		return &Envelope{
 			Peer:  nextTask.Target,

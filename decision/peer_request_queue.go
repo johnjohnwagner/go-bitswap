@@ -4,12 +4,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ipfs/go-bitswap/wantlist"
+	"gx/ipfs/QmTtmrK4iiM3MxWNA3pvbM9ekQiGZAiFyo57GP8B9FFgtz/go-bitswap/wantlist"
 
-	"github.com/ipfs/go-cid"
-	"github.com/ipfs/go-ipfs-pq"
-	"github.com/libp2p/go-libp2p-peer"
+	"gx/ipfs/QmQsErDt8Qgw1XrsXf2BpEzDgGWtB1YLsTAARBup5b6B9W/go-libp2p-peer"
+	"gx/ipfs/QmZFbDTY9jfSBms2MchvYM9oYRbAF19K7Pby47yDBfpPrb/go-cid"
+	"gx/ipfs/QmZUbTDJ39JpvtFCSubiWeUTQRvMA1tVE5RZCJrY4oeAsC/go-ipfs-pq"
 	"math"
+	"strings"
 )
 
 type peerRequestQueue interface {
@@ -27,7 +28,7 @@ func newPRQ() *prq {
 		taskMap:  make(map[string]*peerRequestTask),
 		partners: make(map[peer.ID]*activePartner),
 		frozen:   make(map[peer.ID]*activePartner),
-		pQueue:   pq.New(partnerCompare),
+		pQueue:   pq.New(partnerCompareWeight),
 	}
 }
 
@@ -65,8 +66,11 @@ func (tl *prq) Push(entry *wantlist.Entry, to peer.ID, receipt *Receipt) {
 		return
 	}
 
-	partner.weight = expWeight(receipt)
-
+	if strings.Contains(to.String(), "Wyntbo") {
+		partner.weight = 2
+	} else {
+		partner.weight = expWeight(receipt)
+	}
 	if task, ok := tl.taskMap[taskKey(to, entry.Cid)]; ok {
 		task.Entry.Priority = entry.Priority
 		partner.taskQueue.Update(task.index)
