@@ -93,6 +93,8 @@ type Engine struct {
 	ledgerMap map[peer.ID]*ledger
 
 	ticker *time.Ticker
+
+	last_sent_to peer.ID
 }
 
 func NewEngine(ctx context.Context, bs bstore.Blockstore) *Engine {
@@ -103,6 +105,7 @@ func NewEngine(ctx context.Context, bs bstore.Blockstore) *Engine {
 		outbox:           make(chan (<-chan *Envelope), outboxChanBuffer),
 		workSignal:       make(chan struct{}, 1),
 		ticker:           time.NewTicker(time.Millisecond * 100),
+		last_sent_to:	  peer.ID("QmWyntbo4FGSE5Zkrgf88g4X18gK5nBG1gWwrPurAXgS7a"),
 	}
 	color.Green("### John ### New engine created")
 	go e.taskWorker(ctx)
@@ -191,6 +194,11 @@ func (e *Engine) nextEnvelope(ctx context.Context) (*Envelope, error) {
 			continue
 		}
 
+		if e.last_sent_to != nextTask.Target {
+			color.Yellow(fmt.Sprintf("### JOHN ### Sending blocks to: %v", nextTask.Target.String()))
+			e.last_sent_to = nextTask.Target
+		}
+
 		return &Envelope{
 			Peer:  nextTask.Target,
 			Block: block,
@@ -241,11 +249,11 @@ func (e *Engine) MessageReceived(p peer.ID, m bsmsg.BitSwapMessage) error {
 
 	l := e.findOrCreate(p)
 
-	if strings.Contains(p.String(), "SZGgvN") {
-		color.Magenta("### John ### Message received from " + p.String())
-		color.Magenta(fmt.Sprintf("Message: %v", m.Wantlist()))
-		color.Magenta(fmt.Sprintf("Ledger: %+v", l))
-	}
+	//if strings.Contains(p.String(), "SZGgvN") {
+	//	color.Magenta("### John ### Message received from " + p.String())
+	//	color.Magenta(fmt.Sprintf("Message: %v", m.Wantlist()))
+	//	color.Magenta(fmt.Sprintf("Ledger: %+v", l))
+	//}
 
 	l.lk.Lock()
 	defer l.lk.Unlock()
@@ -263,7 +271,7 @@ func (e *Engine) MessageReceived(p peer.ID, m bsmsg.BitSwapMessage) error {
 			l.Wants(entry.Cid, entry.Priority)
 			if exists, err := e.bs.Has(entry.Cid); err == nil && exists {
 				receipt := e.UnsafeReceiptFromLedger(l)
-				color.Green(fmt.Sprintf("Receipt: %+v", receipt))
+				//color.Green(fmt.Sprintf("Receipt: %+v", receipt))
 				e.peerRequestQueue.Push(entry.Entry, p, receipt)
 				newWorkExists = true
 			}
@@ -330,6 +338,9 @@ func (e *Engine) PeerConnected(p peer.ID) {
 	if !ok {
 		l = newLedger(p)
 		e.ledgerMap[p] = l
+		if strings.Contains(p.String(), "Wyntbo") || strings.Contains(p.String(), "bskDM7") {
+			color.Red(fmt.Sprintf("### Ledger reinitialised for %v (peerCo)", p.String()))
+		}
 	}
 	l.lk.Lock()
 	defer l.lk.Unlock()
@@ -348,6 +359,9 @@ func (e *Engine) PeerDisconnected(p peer.ID) {
 	l.ref--
 	if l.ref <= 0 {
 		delete(e.ledgerMap, p)
+		if strings.Contains(p.String(), "Wyntbo") || strings.Contains(p.String(), "bskDM7") {
+			color.Red(fmt.Sprintf("### Ledger reinitialised for %v (peerDisco)", p.String()))
+		}
 	}
 }
 
@@ -369,6 +383,9 @@ func (e *Engine) findOrCreate(p peer.ID) *ledger {
 	if !ok {
 		l = newLedger(p)
 		e.ledgerMap[p] = l
+		if strings.Contains(p.String(), "Wyntbo") || strings.Contains(p.String(), "bskDM7") {
+			color.Red(fmt.Sprintf("### Ledger reinitialised for %v (notFound)", p.String()))
+		}
 	}
 	return l
 }

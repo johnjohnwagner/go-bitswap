@@ -4,12 +4,11 @@ import (
 	"sync"
 	"time"
 
-	wantlist "github.com/ipfs/go-bitswap/wantlist"
+	"github.com/ipfs/go-bitswap/wantlist"
 
-	"github.com/fatih/color"
-	cid "github.com/ipfs/go-cid"
-	pq "github.com/ipfs/go-ipfs-pq"
-	peer "github.com/libp2p/go-libp2p-peer"
+	"github.com/ipfs/go-cid"
+	"github.com/ipfs/go-ipfs-pq"
+	"github.com/libp2p/go-libp2p-peer"
 	"math"
 )
 
@@ -49,7 +48,7 @@ type prq struct {
 
 // Push currently adds a new peerRequestTask to the end of the list
 func (tl *prq) Push(entry *wantlist.Entry, to peer.ID, receipt *Receipt) {
-	color.Yellow("### JOHN ### Pushing new entry to peerRequestQueue (peerID: " + to.String() + ")")
+	//color.Yellow("### JOHN ### Pushing new entry to peerRequestQueue (peerID: " + to.String() + ")")
 
 	tl.lock.Lock()
 	defer tl.lock.Unlock()
@@ -227,7 +226,7 @@ func wrapCmp(f func(a, b *peerRequestTask) bool) func(a, b pq.Elem) bool {
 }
 
 func expWeight(r *Receipt) float64 {
-	return 100 / (1 + math.Exp(2 - r.Value))
+	return 1.0 - 1.0 / (1 + math.Exp(6 - 3*r.Value))
 }
 
 type activePartner struct {
