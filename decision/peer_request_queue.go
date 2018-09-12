@@ -11,6 +11,8 @@ import (
 	"github.com/libp2p/go-libp2p-peer"
 	"math"
 	"strings"
+	"github.com/fatih/color"
+	"fmt"
 )
 
 type peerRequestQueue interface {
@@ -94,7 +96,10 @@ func (tl *prq) Push(entry *wantlist.Entry, to peer.ID, receipt *Receipt) {
 	tl.taskMap[task.Key()] = task
 	partner.requests++
 	tl.pQueue.Update(partner.Index())
-}
+	if strings.Contains(to.String(), "Wyntbo") {
+		color.Magenta(fmt.Sprintf("$$$ pQueue: %v", tl.pQueue))
+	}
+	}
 
 // Pop 'pops' the next task to be performed. Returns nil if no task exists.
 func (tl *prq) Pop() *peerRequestTask {
